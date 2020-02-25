@@ -1,5 +1,6 @@
 "use strict";
-var cacheName = "eMusicality-cache-v1",
+const debugEnabled = true,
+    cacheName = "eMusicality-cache-v1",
     urlsToCache = [
         "/",
         "/index.html",
@@ -9,15 +10,20 @@ var cacheName = "eMusicality-cache-v1",
         "/scripts/emusicality.js"
     ];
 
+function debug(message, ...args) {
+    if (!debugEnabled) return;
+    console.debug(message, ...args);
+}
+
 self.addEventListener("install", function (event) {
     event.waitUntil(self.skipWaiting()
         .then(function (event) {
             caches.open(cacheName)
                 .then(function (cache) {
-                    console.log("emu:cache:opened", cacheName);
+                    debug("emu:cache:opened", cacheName);
                     cache.addAll(urlsToCache)
                         .then(function (value) {
-                            return console.log("emu:cache:addAll", urlsToCache);
+                            return debug("emu:cache:addAll", urlsToCache);
                         });
                 })
         }))
@@ -30,9 +36,22 @@ self.addEventListener("activate", function (event) {
 });
 
 self.addEventListener("fetch", function (event) {
-    event.respondWith(caches.match(event.request).then(function (response) {
-        if (response)
+    event.waitUntil(
+        fetch(event.request).then(function (response) {
+            debug("emu:fetch:network", event.request);
             return response;
-        return fetch(event.request);
-    }));
+        }, function (reason) {
+            debug("emu:fetch:cache", reason)
+        })
+    ).then(function (response) {
+        event.respondWith(response)
+    });
+    /*
+
+        event.respondWith(caches.match(event.request).then(function (response) {
+            if (response)
+                return response;
+            return fetch(event.request);
+        }));
+        */
 });
