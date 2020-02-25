@@ -12,10 +12,16 @@ var Application;
     Application.config = config;
     ;
     function run() {
-        var fn = function ($log) {
-            $log.debug("emu:run");
+        var fn = function ($window, $log) {
+            if ("serviceWorker" in $window.navigator) {
+                $window.addEventListener("load", function () {
+                    $window.navigator.serviceWorker
+                        .register("/service-worker.js")
+                        .then(function (registration) { return $log.debug("emu:sw:registered", registration); }, function (reason) { return $log.warn("emu:sw:failed", reason); });
+                });
+            }
         };
-        fn.$inject = ["$log"];
+        fn.$inject = ["$window", "$log"];
         return fn;
     }
     Application.run = run;

@@ -8,10 +8,17 @@ namespace Application {
         return fn;
     };
     export function run(): ng.Injectable<Function> {
-        let fn: ng.Injectable<Function> = function ($log: ng.ILogService): void {
-            $log.debug("emu:run");
+        let fn: ng.Injectable<Function> = function ($window: ng.IWindowService, $log: ng.ILogService): void {
+            if ("serviceWorker" in $window.navigator) {
+                $window.addEventListener("load", function () {
+                    $window.navigator.serviceWorker
+                        .register("/service-worker.js")
+                        .then(registration => $log.debug("emu:sw:registered", registration),
+                            reason => $log.warn("emu:sw:failed", reason));
+                });
+            }
         };
-        fn.$inject = ["$log"];
+        fn.$inject = ["$window", "$log"];
         return fn;
     };
     export namespace Player {
