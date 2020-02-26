@@ -1,14 +1,22 @@
 "use strict";
-const debugEnabled = true,
-    cacheName = "eMusicality-cache-v1",
+const
+    version = 1,
     urlsToCache = [
         "/",
-        "/index.html",
+        "https://fonts.googleapis.com/css?family=Lato:400,700,400italic",
+        "https://fonts.gstatic.com/s/lato/v16/S6uyw4BMUTPHjx4wXg.woff2",
+        "/node_modules/bootswatch/dist/darkly/bootstrap.min.css",
+        "/node_modules/font-awesome/css/font-awesome.min.css",
         "/node_modules/angular/angular.min.js",
         "/node_modules/angular-route/angular-route.min.js",
         "/node_modules/angular-sanitize/angular-sanitize.min.js",
-        "/scripts/emusicality.js"
-    ];
+        "/scripts/emusicality.js",
+        "/icons/192.png",
+        "/icons/512.png",
+        "/index.html"
+    ],
+    cacheName = "eMusicality-cache-v" + version,
+    debugEnabled = location.hostname === "localhost" || location.hostname === "127.0.0.1";
 
 function debug(message, ...args) {
     if (!debugEnabled) return;
@@ -35,23 +43,16 @@ self.addEventListener("activate", function (event) {
     }));
 });
 
-self.addEventListener("fetch", function (event) {
-    event.waitUntil(
-        fetch(event.request).then(function (response) {
-            debug("emu:fetch:network", event.request);
-            return response;
-        }, function (reason) {
-            debug("emu:fetch:cache", reason)
+self.addEventListener('fetch', (e) => {
+    e.respondWith(
+        caches.match(e.request).then((r) => {
+            return r || fetch(e.request).then((response) => {
+                return caches.open(cacheName).then((cache) => {
+                    debug("emu:cache:add", e.request.url);
+                    cache.put(e.request, response.clone());
+                    return response;
+                });
+            });
         })
-    ).then(function (response) {
-        event.respondWith(response)
-    });
-    /*
-
-        event.respondWith(caches.match(event.request).then(function (response) {
-            if (response)
-                return response;
-            return fetch(event.request);
-        }));
-        */
+    );
 });
