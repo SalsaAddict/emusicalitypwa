@@ -11,7 +11,7 @@
   "devDependencies": {
     "@types/angular": "^1.6.57",
     "@types/angular-route": "^1.7.0",
-    "angular": "^1.7.9",
+    "angular": "^1.8.0",
     "angular-sanitize": "^1.7.9"
   },
   "dependencies": {
